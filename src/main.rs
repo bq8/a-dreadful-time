@@ -4,6 +4,7 @@ use std::io::Read;
 use chrono::prelude::*;
 use chrono::Duration;
 use clap::{Parser, Subcommand};
+use minijinja::{Environment, context, Source};
 
 const DATE_STR_FORMAT: &str = "%b %e (%Y-%m-%d)";
 
@@ -18,6 +19,7 @@ enum Commands {
     Last {},
     Current {},
     Next {},
+    Email { invoice_id: String },
 }
 
 fn get_billing_period_with_offset(offset: i64) -> (Date<Local>, Date<Local>) {
@@ -58,6 +60,14 @@ fn main() {
             let start_date_str = start_date.format(DATE_STR_FORMAT);
             let end_date_str = end_date.format(DATE_STR_FORMAT);
             println!("Next billing period is from {start_date_str} to {end_date_str}");
+        }
+        Commands::Email { invoice_id } => {
+            let mut env = Environment::new();
+            let mut src = Source::new();
+            src.load_from_path("templates", &["txt"]).unwrap();
+            env.set_source(src);
+            let template = env.get_template("email.txt").unwrap();
+            println!("{}", template.render(context! { test_var => invoice_id }).unwrap());
         }
     }
 }
