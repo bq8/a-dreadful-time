@@ -1,6 +1,3 @@
-use std::fs::File;
-use std::io::Read;
-
 use chrono::prelude::*;
 use chrono::Duration;
 use clap::{Parser, Subcommand};
@@ -16,9 +13,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Last {},
-    Current {},
-    Next {},
+    Dates { period: String },
     Email { invoice_id: String },
 }
 
@@ -33,33 +28,38 @@ fn get_billing_period(date: Date<Local>) -> (Date<Local>, Date<Local>) {
     let offset = date.weekday().num_days_from_monday();
     let monday_start_date = date - Duration::days(offset.into());
     let sunday_start_date = monday_start_date + Duration::days(6);
-    let start_date_str = monday_start_date.to_string();
-    let end_date_str = sunday_start_date.to_string();
 
     return (monday_start_date, sunday_start_date);
+}
+
+fn print_billing_period(period_name: String, start_date: Date<Local>, end_date: Date<Local>) {
+    let start_date_str = start_date.format(DATE_STR_FORMAT);
+    let end_date_str = end_date.format(DATE_STR_FORMAT);
+    println!("{}: {} to {}", period_name, start_date_str, end_date_str);
 }
 
 fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Last {} => {
-            let (start_date, end_date) = get_billing_period_with_offset(-7);
-            let start_date_str = start_date.format(DATE_STR_FORMAT);
-            let end_date_str = end_date.format(DATE_STR_FORMAT);
-            println!("Last billing period is from {start_date_str} to {end_date_str}");
-        }
-        Commands::Current {} => {
-            let (start_date, end_date) = get_billing_period(Local::today());
-            let start_date_str = start_date.format(DATE_STR_FORMAT);
-            let end_date_str = end_date.format(DATE_STR_FORMAT);
-            println!("Current billing period is from {start_date_str} to {end_date_str}");
-        }
-        Commands::Next {} => {
-            let (start_date, end_date) = get_billing_period_with_offset(7);
-            let start_date_str = start_date.format(DATE_STR_FORMAT);
-            let end_date_str = end_date.format(DATE_STR_FORMAT);
-            println!("Next billing period is from {start_date_str} to {end_date_str}");
+        Commands::Dates { period } => {
+            match period.as_str() {
+                "last" => {
+                    let (start_date, end_date) = get_billing_period_with_offset(-7);
+                    print_billing_period("Last billing period".to_string(), start_date, end_date);
+                }
+                "current" => {
+                    let (start_date, end_date) = get_billing_period(Local::today());
+                    print_billing_period("Current billing period".to_string(), start_date, end_date);
+                }
+                "next" => {
+                    let (start_date, end_date) = get_billing_period_with_offset(7);
+                    print_billing_period("Next billing period".to_string(), start_date, end_date);
+                }
+                _ => {
+                    println!("\"{}\" is not a recognized billing period, please use either \"last\", \"current\", or \"next\"", period)
+                }
+            }
         }
         Commands::Email { invoice_id } => {
             let mut env = Environment::new();
