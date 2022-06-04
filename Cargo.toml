@@ -8,4 +8,7 @@ edition = "2021"
 [dependencies]
 chrono = "0.4"
 clap = { version = "3.1", features = ["derive"] }
+core-foundation = "0.9.3"
+cocoa = "0.24.0"
 minijinja = { version = "0.15.0", features = ["source"] }
+objc = "0.2.7"

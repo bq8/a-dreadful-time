@@ -1,7 +1,14 @@
+#[macro_use]
+extern crate objc;
+
+use std::process::Command;
+
 use chrono::prelude::*;
 use chrono::Duration;
 use clap::{Parser, Subcommand};
 use minijinja::{Environment, context, Source};
+
+mod nssharingservice;
 
 const DATE_STR_FORMAT: &str = "%b %e (%Y-%m-%d)";
 
@@ -67,7 +74,19 @@ fn main() {
             src.load_from_path("templates", &["txt"]).unwrap();
             env.set_source(src);
             let template = env.get_template("email.txt").unwrap();
-            println!("{}", template.render(context! { test_var => invoice_id }).unwrap());
+            let message = template.render(context! { test_var => invoice_id }).unwrap();
+            /*
+            println!("{}", message);
+            unsafe {
+                println!("calling unsafe fn");
+                nssharingservice::open_email_compose_window(message);
+            }
+            */
+            let output = Command::new("built_products/OGSharingService")
+                .output()
+                .unwrap();
+
+            println!("{}", String::from_utf8_lossy(&output.stdout));
         }
     }
 }
