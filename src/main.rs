@@ -75,18 +75,17 @@ fn main() {
             env.set_source(src);
             let template = env.get_template("email.txt").unwrap();
             let message = template.render(context! { test_var => invoice_id }).unwrap();
-            /*
             println!("{}", message);
             unsafe {
                 println!("calling unsafe fn");
                 nssharingservice::open_email_compose_window(message);
             }
-            */
-            let output = Command::new("built_products/OGSharingService")
-                .output()
-                .unwrap();
 
-            println!("{}", String::from_utf8_lossy(&output.stdout));
+            // let output = Command::new("built_products/OGSharingService")
+            //     .output()
+            //     .unwrap();
+
+            // println!("{}", String::from_utf8_lossy(&output.stdout));
         }
     }
 }
